@@ -1,10 +1,6 @@
 const Discord = require('discord.js');
 const bot = new Discord.Client();
-const api = require('openweather-apis');
-
-api.setLang('en');
-api.setAPPID('b0b4cb7af9dc9d779c139543b19c6ca2');
-
+const weather = require('weather-js');
 
 bot.login(process.env.token);
 
@@ -12,28 +8,74 @@ const prefix = '!';
 
 bot.on('ready', () => {
     console.log('Bot is online!');
+    bot.user.setActivity('The Weather', {type: 'WATCHING'});
 });
 
 bot.on('message', async msg=>{
     let args = msg.content.substring(prefix.length).split(' ');
     switch(args[0]){
-        case 'city':
-            //you can type the city with lowercase letters
-            await api.setCity(args[1]);
-            let weatherData = await api.getAllWeather(function(err, JSONObj){
-                let weatherEmbed = new Discord.MessageEmbed();
-                weatherEmbed.setTitle('Weather in ' + args[1]);
-                weatherEmbed.setColor('#0099f');
-                weatherEmbed.setThumbnail('https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Ficons.iconarchive.com%2Ficons%2Fwineass%2Fios7-redesign%2F512%2FWeather-icon.png&f=1&nofb=1');
-                weatherEmbed.addField('**Temperature in F°**', JSONObj.main.temp*1.8+32+'°');
-                weatherEmbed.addField('**High**', JSONObj.main.temp_max*1.8+32+'°', true);
-                weatherEmbed.addField('**Low**', JSONObj.main.temp_min*1.8+32+'°', true);
-                weatherEmbed.addField('**Description**', JSONObj.weather[0].description);
-                weatherEmbed.addField('**Pressure**', JSONObj.main.pressure+' inHg ', true);
-                weatherEmbed.addField('**Humidity**', JSONObj.main.humidity+'%',true);
-                weatherEmbed.addField('**Wind Speed**', JSONObj.wind.speed+' mph ', true);
-                weatherEmbed.addField('**Visibility**', JSONObj.visibility+' mi ');
-                msg.channel.send(weatherEmbed);
-            })
+        case 'help':
+            msg.channel.send('Type "!weather" along with the location to get the weather and the forecast (you can type the location in lowercase)'+'\n'+'Example: !weather Polva');
+            
+        case 'weather':
+            await weather.find({search: args.join(" "), degreeType: 'F'}, function(err, result){
+                if(err) console.log(err);
+                //console.log(result);
+                //let JSONweather = JSON.stringify(result, null, 2);
+                let aWeatherEmbed = new Discord.MessageEmbed()
+                .setTitle('Weather in '+result[0].location.name)
+                .setThumbnail('https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Ficons.iconarchive.com%2Ficons%2Fwineass%2Fios7-redesign%2F512%2FWeather-icon.png&f=1&nofb=1')
+                .setFooter('MSN Weather', 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages-na.ssl-images-amazon.com%2Fimages%2FI%2F31z8fsGe1IL.png&f=1&nofb=1')
+                .addField('**Day:**', result[0].current.shortday+' '+result[0].current.date)
+                .addField('**Temperature in F°**', result[0].current.temperature+'°')
+                .addField('**Description**', result[0].current.skytext)
+                .addField('**Humidity**', result[0].current.humidity+'%')
+                .addField('**Wind**', result[0].current.winddisplay)
+                .addField('**Forecast for** '+result[0].forecast[0].shortday+ ' ' + result[0].forecast[0].date, 
+                
+                'High: '+ result[0].forecast[0].high+'°'+ '\n'+
+                'Low: ' + result[0].forecast[0].low+'°'+ '\n'+
+                'Description: '+ result[0].forecast[0].skytextday+'\n'+
+                'Precipitation: '+result[0].forecast[0].precip/100+' in.',true
+                )
+                .addField('**Forecast for** '+result[0].forecast[1].shortday + ' ' + result[0].forecast[1].date, 
+                
+                'High: '+ result[0].forecast[1].high+'°'+ '\n'+
+                'Low: ' + result[0].forecast[1].low+'°'+ '\n'+
+                'Description: '+ result[0].forecast[1].skytextday+'\n'+
+                'Precipitation: '+result[0].forecast[1].precip/100+' in.',true
+
+                
+                )
+                .addField('**Forecast for** '+result[0].forecast[2].shortday + ' ' + result[0].forecast[2].date, 
+                
+                'High: '+ result[0].forecast[2].high+'°'+ '\n'+
+                'Low: ' + result[0].forecast[2].low+'°'+ ' \n'+
+                'Description: '+ result[0].forecast[2].skytextday+'\n'+
+                'Precipitation: '+result[0].forecast[2].precip/100+' in.',true
+
+                
+                )
+                .addField('**Forecast for** '+result[0].forecast[3].shortday + ' ' + result[0].forecast[3].date, 
+                
+                'High: '+ result[0].forecast[3].high+'°'+ '\n'+
+                'Low: ' + result[0].forecast[3].low+'°'+ '\n'+
+                'Description: '+ result[0].forecast[3].skytextday+'\n'+
+                'Precipitation: '+result[0].forecast[3].precip/100+' in.',true
+
+                
+                )
+                .addField('**Forecast for** '+result[0].forecast[4].shortday + ' ' + result[0].forecast[4].date, 
+                
+                'High: '+ result[0].forecast[4].high+'°'+ '\n'+
+                'Low: ' + result[0].forecast[4].low+'°'+ '\n'+
+                'Description: '+ result[0].forecast[4].skytextday+'\n'+
+                'Precipitation: '+result[0].forecast[4].precip/100+' in.',true
+
+                
+                );
+                msg.channel.send(aWeatherEmbed);
+                
+            });
     }
 })
